@@ -5,6 +5,8 @@
   4、then 方法中判断状态
     1）如果状态式成功则调用成功回调
     2）如果失败则调用失败回调
+  5、处理异步任务情况
+  6、then 方法会多次调用
 */
 
 //使用常量代表状态
@@ -24,10 +26,10 @@ class MyPromise {
   //reject 传参
   errorMsf = '';
 
-  //成功回调
-  successCallback = undefined;
+  //成功回调 使用数组处理 then 的多次调用（步骤5/6）
+  successCallback = [];
   //失败回调
-  errorCallback = undefined;
+  errorCallback = [];
 
   // 当调用静态或原型方法时没有指定 this 的值，那么方法内的 this 值将被置为 undefined;
   resolve = (value)=> {   //这里为了以后获取 this 使用箭头函数形式定义 resolve 原型方法   //步骤 3
@@ -35,8 +37,9 @@ class MyPromise {
     this.status = FULFILLED;
     this.successMsg = value;
 
-    //判断成功回调是否存在
-    this.successCallback && this.successCallback(this.successMsg)
+    //判断成功回调是否存在 （步骤5/6）
+    // this.successCallback && this.successCallback(this.successMsg)
+    while(this.successCallback.length) this.successCallback.shift()(this.successMsg)
   }
 
   //原型方法 reject
@@ -45,20 +48,19 @@ class MyPromise {
     this.status = REJECT;
     this.errorMsf = value;
 
-    //判断成功回调是否存在
-    this.errorCallback && this.errorCallback(this.errorMsf)
+    //判断成功回调是否存在 （步骤5/6）
+    // this.errorCallback && this.errorCallback(this.errorMsf)
+    while(this.errorCallback.length) this.errorCallback.shift()(this.errorMsf)
   }
   then = (success, error)=>{        //步骤 4
     if(this.status === FULFILLED) {
       success(this.successMsg);
     }else if(this.status === REJECT) {
       error(this.errorMsf);
-    }else {           //处理异步情况
-
-      //将成功回调和失败回调存储起来
-      this.successCallback = success;
-      this.errorCallback = error;
-
+    }else {           //处理异步情况 （步骤5/6）
+      //then会多次调用。将成功回调和失败回调存储起来，
+      this.successCallback.push(success);
+      this.errorCallback.push(error);
     }
   }
 }
