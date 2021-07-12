@@ -7,6 +7,7 @@
     2）如果失败则调用失败回调
   5、处理异步任务情况
   6、then 方法会多次调用
+  7、then 实现链式调用，then 方法里生成promise 对象
 */
 
 //使用常量代表状态
@@ -53,15 +54,31 @@ class MyPromise {
     while(this.errorCallback.length) this.errorCallback.shift()(this.errorMsf)
   }
   then = (success, error)=>{        //步骤 4
-    if(this.status === FULFILLED) {
-      success(this.successMsg);
-    }else if(this.status === REJECT) {
-      error(this.errorMsf);
-    }else {           //处理异步情况 （步骤5/6）
-      //then会多次调用。将成功回调和失败回调存储起来，
-      this.successCallback.push(success);
-      this.errorCallback.push(error);
-    }
+    //步骤 7
+    let promise = new MyPromise((resolve, reject)=>{
+      if(this.status === FULFILLED) {
+        let res = success(this.successMsg);   //这里获取上次then
+        // resolve(res);
+        resolveThenRes(res, resolve, reject);
+      }else if(this.status === REJECT) {
+        error(this.errorMsf);
+      }else {           //处理异步情况 （步骤5/6）
+        //then会多次调用。将成功回调和失败回调存储起来，
+        this.successCallback.push(success);
+        this.errorCallback.push(error);
+      }
+    });
+    return promise;
+  }
+}
+
+function resolveThenRes(res, resolve, reject) {
+  //判断 res 是普通值还是 promise 对象
+  if(res instanceof MyPromise) {
+    // res.then(res=>resolve(res), error=>reject(error))z
+    res.then(resolve, reject)
+  }else {
+    resolve(res);
   }
 }
 
