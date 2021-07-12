@@ -24,11 +24,19 @@ class MyPromise {
   //reject 传参
   errorMsf = '';
 
+  //成功回调
+  successCallback = undefined;
+  //失败回调
+  errorCallback = undefined;
+
   // 当调用静态或原型方法时没有指定 this 的值，那么方法内的 this 值将被置为 undefined;
   resolve = (value)=> {   //这里为了以后获取 this 使用箭头函数形式定义 resolve 原型方法   //步骤 3
     if(this.status !== PENDING)  return;   //如果状态不是等待，阻止程序执行
     this.status = FULFILLED;
     this.successMsg = value;
+
+    //判断成功回调是否存在
+    this.successCallback && this.successCallback(this.successMsg)
   }
 
   //原型方法 reject
@@ -36,12 +44,21 @@ class MyPromise {
     if(this.status !== PENDING)  return;
     this.status = REJECT;
     this.errorMsf = value;
+
+    //判断成功回调是否存在
+    this.errorCallback && this.errorCallback(this.errorMsf)
   }
   then = (success, error)=>{        //步骤 4
     if(this.status === FULFILLED) {
       success(this.successMsg);
     }else if(this.status === REJECT) {
       error(this.errorMsf);
+    }else {           //处理异步情况
+
+      //将成功回调和失败回调存储起来
+      this.successCallback = success;
+      this.errorCallback = error;
+
     }
   }
 }

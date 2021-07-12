@@ -4,8 +4,12 @@
 let MyPromise = require('./Promise/myPromise.js');
 
 let promise = new MyPromise((resolve, reject)=>{
-  resolve('执行成功');
-  reject('失败')
+  // resolve('执行成功');
+  // reject('失败')
+  setTimeout(()=>{
+    // resolve('执行成功');
+    reject('失败')
+  }, 2000)
 })
 
 promise.then((res)=>{
